@@ -1,24 +1,43 @@
 {
-  "name": "scrapperapi_tmp",
+  "name": "scrapper-api",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
+    "@prisma/client": "^6.17.1",
+    "@radix-ui/react-popover": "^1.1.23",
+    "@tanstack/react-table": "^8.21.3",
+    "cmdk": "^1.1.1",
+    "exceljs": "^4.4.0",
+    "lucide-react": "^1.28.0",
+    "maplibre-gl": "^6.1.0",
     "next": "16.2.12",
+    "prisma": "^6.17.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.5.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "postcss": "^8.5.25",
+    "tailwindcss": "^3.4.19",
+    "tsx": "^4.23.1",
     "typescript": "^5"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }

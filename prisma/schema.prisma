@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum SearchStatus {
+  PENDING
+  COMPLETED
+  REUSED
+  FAILED
+}
+
+enum SearchMode {
+  CATEGORY
+  NAME_FALLBACK
+}
+
+enum SearchProvider {
+  GEOAPIFY
+  GOOGLE
+}
+
+model Workspace {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  searches Search[]
+
+  @@map("workspaces")
+}
+
+model Business {
+  placeId         String   @id @map("place_id")
+  provider        SearchProvider @default(GEOAPIFY)
+  externalPlaceId String   @map("external_place_id")
+  name            String
+  primaryCategory String   @map("primary_category")
+  categoryLabel   String?  @map("category_label")
+  address         String
+  phone           String?
+  website         String?
+  hasWebsite      Boolean  @default(false) @map("has_website")
+  lat             Float
+  lon             Float
+  city            String?
+  state           String?
+  postcode        String?
+  country         String?
+  allCategories   String?  @map("all_categories")
+  rating          Float?
+  reviewCount     Int?     @map("review_count")
+  leadScore       Int      @default(0) @map("lead_score")
+  contactSource   String?  @map("contact_source")
+  lastSeenAt      DateTime? @map("last_seen_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  searchResults SearchResult[]
+
+  @@index([primaryCategory])
+  @@index([hasWebsite, primaryCategory])
+  @@index([city])
+  @@index([lat, lon])
+  @@index([provider, externalPlaceId])
+  @@index([leadScore])
+  @@index([updatedAt])
+  @@map("businesses")
+}
+
+model Search {
+  id                   String       @id @default(cuid())
+  workspaceId          String       @map("workspace_id")
+  queryTextOriginal    String       @map("query_text_original")
+  queryCategory        String?      @map("query_category")
+  searchMode           SearchMode   @default(CATEGORY) @map("search_mode")
+  provider             SearchProvider @default(GEOAPIFY)
+  locationQuery        String       @map("location_query")
+  locationLabel        String       @map("location_label")
+  geocodePlaceId       String?      @map("geocode_place_id")
+  centerLat            Float        @map("center_lat")
+  centerLon            Float        @map("center_lon")
+  radiusMeters         Int          @map("radius_meters")
+  fingerprint          String       @map("fingerprint")
+  status               SearchStatus @default(PENDING)
+  executedAt           DateTime     @default(now()) @map("executed_at")
+  resultsCount         Int          @default(0) @map("results_count")
+  newResultsCount      Int          @default(0) @map("new_results_count")
+  existingResultsCount Int          @default(0) @map("existing_results_count")
+  withPhoneCount       Int          @default(0) @map("with_phone_count")
+  apiCalls             Int          @default(0) @map("api_calls")
+  isRefresh            Boolean      @default(false) @map("is_refresh")
+  reusedFromSearchId   String?      @map("reused_from_search_id")
+  staleAfterAt         DateTime?    @map("stale_after_at")
+  errorCode            String?      @map("error_code")
+  errorMessage         String?      @map("error_message")
+  createdAt            DateTime     @default(now()) @map("created_at")
+
+  workspace        Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  reusedFromSearch Search?      @relation("SearchReuse", fields: [reusedFromSearchId], references: [id])
+  reusedBySearches Search[]     @relation("SearchReuse")
+  searchResults    SearchResult[]
+
+  @@index([workspaceId, executedAt])
+  @@index([workspaceId, fingerprint, executedAt])
+  @@index([queryCategory, executedAt])
+  @@index([locationLabel])
+  @@map("searches")
+}
+
+model SearchResult {
+  searchId        String   @map("search_id")
+  businessPlaceId String   @map("business_place_id")
+  foundAt         DateTime @default(now()) @map("found_at")
+
+  search   Search   @relation(fields: [searchId], references: [id], onDelete: Cascade)
+  business Business @relation(fields: [businessPlaceId], references: [placeId], onDelete: Cascade)
+
+  @@id([searchId, businessPlaceId])
+  @@index([businessPlaceId])
+  @@index([foundAt])
+  @@map("search_results")
+}
